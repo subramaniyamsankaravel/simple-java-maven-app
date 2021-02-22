@@ -1,21 +1,25 @@
-pipeline{
-  agent {
-    docker {
-      image 'maven:3-alpine'
-      args '-v /root/.m2:/root/.m2'
-    }
-  }
-  stages {
-    stage('Build'){
-      steps{
-        sh 'mvn -B -DskipTests clean package'
-      }
+stage('collect artifact'){
+     steps{
+     archiveArtifacts artifacts: 'target/*.jar', followSymlinks: false
      }
-    stage('Test'){
-      steps{
-        sh 'mvn test'
-      }
-      
-  }
-  }
-}
+     }
+     stage('deploy to artifactory')
+     {
+     steps{
+     
+     rtUpload (
+    serverId: 'artifactory-server',
+    spec: '''{
+          "files": [
+            {
+              "pattern": "target/*.jar",
+              "target": "art-doc-dev-loc"
+            }
+         ]
+    }''',
+ 
+  
+    buildName: 'holyFrog',
+    buildNumber: '42'
+)
+     }}
